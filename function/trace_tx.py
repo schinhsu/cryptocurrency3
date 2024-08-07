@@ -1,4 +1,4 @@
-from function import columns
+from . import columns
 import pandas
 
 #確認追查結果
