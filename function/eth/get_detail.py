@@ -43,6 +43,7 @@ def get_tx_by_hash(ethObj,txid):
         dfTrim.loc[:,['symbol','amount']] = tokenValues
         dfTrim.loc[:,['time']] = tx_time
         dfTrim.loc[:,['txfee']] = txfee
-        dfFiltered = dfTrim[['block','transactionHash','time','from','to','amount','txfee','symbol','address']]
-        dfFiltered.columns = ['BlockNo','TxID','Date(UTC+8)','From','To','Value','TxFee','Token','Contract']
+        dfTrim.loc[:,['txtype']] = 'ERC20'
+        dfFiltered = dfTrim[['block','transactionHash','time','from','to','amount','txfee','symbol','address','txtype']]
+        dfFiltered.columns = ['BlockNo','TxID','Date(UTC+8)','From','To','Value','TxFee','Token','Contract','TXType']
     return dfFiltered
