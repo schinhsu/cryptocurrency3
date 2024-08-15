@@ -46,7 +46,7 @@ def lookup_details_tron(tronObj,txinfo):
     df['amount'] = df[['amount_str','decimals']].apply(lambda x: transform_balance(x['amount_str'], x['decimals']), axis=1)
     df['block'] = res['block']
     df['txid'] = res['hash']
-    df['time'] = pandas.to_datetime(res['timestamp'],unit='ms').tz_localize(pytz.utc).tz_convert('Asia/Taipei')
+    df['time'] = pandas.to_datetime(res['timestamp'],unit='ms')
     df['txfee'] = transform_balance(res['cost']['energy_fee'],decimalLen=6)
     df['symbol'] = df['symbol'].str.upper()
     dfTrim = df[['block','txid','time','from_address','to_address','amount','txfee','symbol','contract_address']]
