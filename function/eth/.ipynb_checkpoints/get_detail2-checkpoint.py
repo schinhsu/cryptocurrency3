@@ -8,7 +8,7 @@ def get_tx_by_hash(ethObj,txid):
     res = ethObj.get_txinfo_by_hash(txid)
     res3 = ethObj.get_time_by_blockno(res['result']['blockNumber'])
     timestamp = int(res3['result']['timestamp'], 16)
-    tx_time = pandas.to_datetime(timestamp,unit='s').tz_localize('Asia/Taipei')
+    tx_time = pandas.to_datetime(timestamp,unit='s')
     
     res2 = ethObj.get_txinfo_by_hash2(txid)
     value = transform_balance(str(int(res2['result']['value'],16)),decimalLen=18)
@@ -45,5 +45,5 @@ def get_tx_by_hash(ethObj,txid):
         dfTrim.loc[:,['txfee']] = txfee
         dfTrim.loc[:,['txtype']] = 'ERC20'
         dfFiltered = dfTrim[['block','transactionHash','time','from','to','amount','txfee','symbol','address','txtype']]
-        dfFiltered.columns = ['BlockNo','TxID','Date(UTC+8)','From','To','Value','TxFee','Token','Contract','TXType']
+        dfFiltered.columns = ['BlockNo','TxID','Date','From','To','Value','TxFee','Token','Contract','TXType']
     return dfFiltered

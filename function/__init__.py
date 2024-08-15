@@ -1,5 +1,6 @@
 # 統一輸出欄位
-columns = ['BlockNo','TxID','Date(UTC+8)','From','To','Value','TxFee','Token','Contract','TXType']
+#columns = ['BlockNo','TxID','Date(UTC+8)','From','To','Value','TxFee','Token','Contract','TXType']
+columns = ['BlockNo','TxID','Date','From','To','Value','TxFee','Token','Contract','TXType']
 
 
 def transform_balance(balance,decimalLen=18):
@@ -23,5 +24,6 @@ def transform_balance(balance,decimalLen=18):
     return eval(balance)
 
     
-from .trace_tx import get_target_txs
-
+from .trace_tx2 import get_target_txs
+from .check_sc2 import lookup_details_eth
+from .check_sc2 import lookup_details_tron

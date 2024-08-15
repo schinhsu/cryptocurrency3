@@ -1,4 +1,4 @@
-from function import columns
+from . import columns
 import pandas
 
 #確認追查結果
@@ -21,7 +21,10 @@ def get_target_txs(txinfo,traceType,toTrace,traceTolerance=10,ignoreAmount=1):
                 result = pandas.concat([result,pandas.DataFrame([row.values],columns=row.index)])
                 if amount >= txinfo['Value']:
                     break
-    errMsg = f'下載交易資料(總數={len(toTrace)}、時間={toTrace.iloc[-1]["Date(UTC+8)"].strftime("%Y-%m-%d %H:%M:%S")})'
+    if toTrace.empty:
+        errMsg = f'下載交易資料(總數={len(toTrace)}'
+    else:
+        errMsg = f'下載交易資料(總數={len(toTrace)}、時間={toTrace.iloc[-1]["Date(UTC+8)"].strftime("%Y-%m-%d %H:%M:%S")})'
     if not start:
         errMsg += '未包含原始追蹤交易'
     elif count == 0:
