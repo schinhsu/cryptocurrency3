@@ -48,7 +48,7 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
 
     dfCollect = json2df_tron(collects,transType=transType)
     dfCollect = dfCollect.drop_duplicates()
-    dfCollect = dfCollect[(dfCollect['Date']>=start)&(dfCollect['Date']<=end)]
+    #dfCollect = dfCollect[(dfCollect['Date']>=start)&(dfCollect['Date']<=end)]
     return dfCollect
 
 
@@ -148,7 +148,7 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
     if sort == 'desc':
         setTrue,setInfo = set_starttime()
         if setTrue:
-            dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
+            dfCollect = get_transfer_tron_desc(tronObj,addr,start=setInfo,
                          end=end,transType=transType,limit=totalLimit,
                          debugMode=debugMode)
         else:
