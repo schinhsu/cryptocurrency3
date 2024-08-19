@@ -50,7 +50,7 @@ def lookup_details_tron(tronObj,txinfo):
     df['txfee'] = transform_balance(res['cost']['energy_fee'],decimalLen=6)
     df['symbol'] = df['symbol'].str.upper()
     dfTrim = df[['block','txid','time','from_address','to_address','amount','txfee','symbol','contract_address']]
-    dfTrim.columns = columns
+    dfTrim.columns = ['BlockNo','TxID','Date','From','To','Value','TxFee','Token','Contract']
 
     dfFiltered = dfTrim[~((dfTrim['From']==txinfo['From']) & (dfTrim['To']==txinfo['To']) & (dfTrim['Value']==txinfo['Value']) & (dfTrim['Token']==txinfo['Token']))]
     
