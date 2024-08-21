@@ -15,7 +15,9 @@ def get_target_txs(txinfo,traceType,toTrace,traceTolerance=10,ignoreAmount=1):
             start = True
             continue
         if start:
-            if row[traceType] != txinfo[traceType] and row['Contract'] == txinfo['Contract'] and row['Token'] == txinfo['Token']:
+            ### eth的Contract欄位會是空值
+            if row[traceType] != txinfo[traceType] and (len(row['Contract']) == 0 or row['Contract'] == txinfo['Contract']) and row['Token'] == txinfo['Token']:
+            #if row[traceType] != txinfo[traceType] and row['Contract'] == txinfo['Contract'] and row['Token'] == txinfo['Token']:
                 amount += row['Value']
                 count += 1
                 result = pandas.concat([result,pandas.DataFrame([row.values],columns=row.index)])
