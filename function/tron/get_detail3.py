@@ -45,6 +45,10 @@ def get_tx_by_hash(tronObj,txid):
         token = 'TRX'
         contract = ''
         txtype = 'trc10'
+        if 'tokenInfo' in trx_info['contractData'].keys():
+            token = trx_info['contractData']['tokenInfo']['tokenAbbr']
+            contract = trx_info['contractData']['tokenInfo']['tokenId']
+            txtype = trx_info['contractData']['tokenInfo']['tokenType']
         # print(f'{from_} 轉帳 {amount} {token}({contract}/{txtype}) 給 {to_}')
         txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
     ##但除了trx以外的交易都有['transfersAllList']
