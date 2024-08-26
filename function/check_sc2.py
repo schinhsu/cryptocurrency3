@@ -35,7 +35,7 @@ def lookup_details_eth(ethObj,txinfo):
     dfFiltered = dfFiltered[~((dfFiltered['From']==txinfo['From']) & (dfFiltered['To']==txinfo['To']) & (dfFiltered['Value']==txinfo['Value']) & (dfFiltered['Token']==txinfo['Token']))]
     
     txinfo_columns = txinfo.index.tolist()
-    for i in range(len(columns),len(txinfo_columns)):
+    for i in range(len(dfFiltered.columns),len(txinfo_columns)):
         dfFiltered[txinfo_columns[i]] = txinfo[txinfo_columns[i]]
     return dfFiltered
 
@@ -55,7 +55,7 @@ def lookup_details_tron(tronObj,txinfo):
     dfFiltered = dfTrim[~((dfTrim['From']==txinfo['From']) & (dfTrim['To']==txinfo['To']) & (dfTrim['Value']==txinfo['Value']) & (dfTrim['Token']==txinfo['Token']))]
     
     txinfo_columns = txinfo.index.tolist()
-    for i in range(len(columns),len(txinfo_columns)):
+    for i in range(len(dfFiltered.columns),len(txinfo_columns)):
         dfFiltered.loc[:,[txinfo_columns[i]]] = [txinfo[txinfo_columns[i]] for _ in range(len(dfFiltered))]
 
     ## tron的智能合約排列順序好像都是固定從trx開始，多一個欄位確認To錢包位址是否為智能合約
