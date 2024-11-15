@@ -72,7 +72,9 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
         if pageNo >= pageLimit:
             endtime = pandas.to_datetime(txs[-1][time_colname],unit='ms')
             pageNo = 0
-        
+
+    if error:
+        return pandas.DataFrame(columns=columns)
     
     dfCollect = json2df_tron(tronObj,collects,transType=transType)
     dfCollect = dfCollect.drop_duplicates()
@@ -231,7 +233,7 @@ def json2df_tron(tronObj,response,transType):
                            ])
         dfTxs = pandas.DataFrame(data=txinfos,columns=columns+['FromContract','ToContract','FromLabel','ToLabel'])
 
-
+    
     if not 'FromLabel' in dfTxs.columns:
         if dfTxs.empty:
             dfTxs['FromLabel'] = []
