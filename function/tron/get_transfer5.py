@@ -94,6 +94,12 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
             thisTotal = res['rangeTotal']
             if debugMode:
                 print(f'>> 設定查詢時間(迄)= {endtime.strftime("%Y-%m-%d %H:%M:%S")} 共 {thisTotal} 筆；預計調整startnum = min({thisTotal}-{limit},9950) = {max(min(thisTotal-limit,9950),0)}')
+            if thisTotal > 1000000:
+                msg = f'交易總數超過1000000次，應為交易所或服務商'
+                if debugMode:
+                    print(msg)
+                    error = True
+                    break
             if thisTotal > limit:
                 offset = min(thisTotal-limit,9950)
                 offset = max(offset,0)
