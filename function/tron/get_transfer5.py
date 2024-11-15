@@ -173,8 +173,8 @@ def json2df_tron(tronObj,response,transType):
                                 token,contract,txType])
         dfTxs = pandas.DataFrame(data=txinfos,columns=columns)
         if len(response['contractMap']) > 0:
-            dfTxs['FromContract'] = dfTxs.apply(lambda tx:response['contractMap'][tx['From']],axis=1)
-            dfTxs['ToContract'] = dfTxs.apply(lambda tx:response['contractMap'][tx['To']],axis=1)
+            dfTxs['FromContract'] = dfTxs.apply(lambda tx:response['contractMap'].get(tx['From'],False),axis=1)
+            dfTxs['ToContract'] = dfTxs.apply(lambda tx:response['contractMap'].get(tx['To'],False),axis=1)
         
     elif transType == 'Internal':
         for tx in response['data']:
