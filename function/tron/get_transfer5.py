@@ -73,8 +73,6 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
             endtime = pandas.to_datetime(txs[-1][time_colname],unit='ms')
             pageNo = 0
 
-    if error:
-        return pandas.DataFrame(columns=columns)
     
     dfCollect = json2df_tron(tronObj,collects,transType=transType)
     dfCollect = dfCollect.drop_duplicates()
@@ -134,7 +132,9 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
                     endtime = tmptime
             else:
                 break
-    
+    if error:
+        return pandas.DataFrame(columns=columns)
+        
     dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
                          end=endtime,transType=transType,limit=limit,
                          debugMode=debugMode)
