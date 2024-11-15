@@ -3,14 +3,17 @@ from .req_management import ReqManagement
 import datetime
 
 class Tronscan:
-    def __init__(self,debugMode=False,sessionVerify=False):
+    def __init__(self,debugMode=False,sessionVerify=False,apiKey=None):
         self.req_manage = ReqManagement(excludes=['message','Error'],debugMode=debugMode,sessionVerify=sessionVerify)
         
         self.url = 'https://apilist.tronscan.org/api/'
+        self.headers = {}
+        if not apiKey is None:
+            self.headers['TRON-PRO-API-KEY'] = apiKey
 
     def get_txinfo_by_hash(self,txid):
         params = {'hash':txid}
-        res = self.req_manage.send_requests('get',self.url+'transaction-info',params=params)
+        res = self.req_manage.send_requests('get',self.url+'transaction-info',params=params,headers=self.headers)
         return res.json() #dict
 
     #API每次回覆50筆(limit)的資料量
@@ -32,20 +35,20 @@ class Tronscan:
             params['address'] = addr
         else:
             print(f'!!Undefined TransType:{transType}!!')
-        res = self.req_manage.send_requests('get',url,params=params)
+        res = self.req_manage.send_requests('get',url,params=params,headers=self.headers)
         return res.json() #dict
 
     def get_account_info(self,addr):
         params = {'address':addr}
-        res = self.req_manage.send_requests('get',self.url+'account',params=params)
+        res = self.req_manage.send_requests('get',self.url+'account',params=params,headers=self.headers)
         return res.json() #dict
 
     def get_account_detailed_info(self,addr):
         params = {'address':addr}
-        res = self.req_manage.send_requests('get',self.url+'accountv2',params=params)
+        res = self.req_manage.send_requests('get',self.url+'accountv2',params=params,headers=self.headers)
         return res.json() #dict
 
     def get_contract_info(self,contractAddr):
         params = {'contract':contractAddr}
-        res = self.req_manage.send_requests('get',self.url+'contract',params=params)
+        res = self.req_manage.send_requests('get',self.url+'contract',params=params,headers=self.headers)
         return res.json() #dict

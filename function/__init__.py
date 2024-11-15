@@ -27,3 +27,10 @@ def transform_balance(balance,decimalLen=18):
 from .trace_tx2 import get_target_txs
 from .check_sc2 import lookup_details_eth
 from .check_sc2 import lookup_details_tron
+
+from .labels import WalletLabels
+labels = WalletLabels()
+
+from .query_label import query_label_tron
+
+from .prices import PriceHistoryManager

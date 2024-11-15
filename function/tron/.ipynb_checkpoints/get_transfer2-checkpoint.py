@@ -48,7 +48,7 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
 
     dfCollect = json2df_tron(collects,transType=transType)
     dfCollect = dfCollect.drop_duplicates()
-    dfCollect = dfCollect[(dfCollect['Date']>=start)&(dfCollect['Date']<=end)]
+    #dfCollect = dfCollect[(dfCollect['Date']>=start)&(dfCollect['Date']<=end)]
     return dfCollect
 
 
@@ -75,7 +75,7 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
         count = 0
         time_colname = 'timestamp' if transType != 'TRC20' else 'block_ts'
         res = tronObj.get_transfer_once(addr,startnum=0,
-                                        start=start,end=endtime,
+                                        start=starttime,end=endtime,
                                             transType=transType)
         if res['rangeTotal'] > totalLimit:
             if debugMode:
@@ -140,7 +140,7 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
         setTrue,setInfo = set_endtime()
         if setTrue:
             dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
-                     end=setInfo,transType=transType,limit=limit,
+                     end=setInfo,transType=transType,limit=totalLimit,
                      debugMode=debugMode)
             dfCollect = dfCollect.sort_values(by='Date')
         else:
@@ -148,8 +148,8 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
     if sort == 'desc':
         setTrue,setInfo = set_starttime()
         if setTrue:
-            dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
-                         end=end,transType=transType,limit=limit,
+            dfCollect = get_transfer_tron_desc(tronObj,addr,start=setInfo,
+                         end=end,transType=transType,limit=totalLimit,
                          debugMode=debugMode)
         else:
             dfCollect = json2df_tron([],transType=transType)

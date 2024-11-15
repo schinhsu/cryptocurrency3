@@ -26,7 +26,7 @@ def get_transfer_eth(ethObj,addr,start=datetime.datetime(2010,1,1),
             pageNo = 0
         pageNo += 1
         if debugMode:
-            print('page',pageNo,sort,startblock,endblock)
+            print('page',pageNo,sort,startblock,endblock,batchnum,addr)
         if transType in ['Normal','Internal','ERC20']:
             res = ethObj.get_transfer_once(addr,batchnum=batchnum,
                                         endblock=endblock,

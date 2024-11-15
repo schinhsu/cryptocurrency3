@@ -25,6 +25,18 @@ class Etherscan:
                   'txhash':txid,'apikey':self.key}
         res = self.req_manage.send_requests(method='get',url=self.url,params=params)
         return res.json()
+
+    def get_txinfo_by_hash2(self,txid:str):
+        params = {'module':'proxy','action':'eth_getTransactionByHash',
+                  'txhash':txid,'apikey':self.key}
+        res = self.req_manage.send_requests(method='get',url=self.url,params=params)
+        return res.json()
+    
+    def get_time_by_blockno(self,block,detail=False):
+        params = {'module':'proxy','action':'eth_getBlockByNumber',
+                  'boolean':detail,'tag':block,'apikey':self.key}
+        res = self.req_manage.send_requests(method='get',url=self.url,params=params)
+        return res.json()
     
     def get_balance(self,addr:str):
         params = {'module':'account','action':'balance','address':addr,'apikey':self.key}

@@ -59,6 +59,6 @@ def lookup_details_tron(tronObj,txinfo):
         dfFiltered.loc[:,[txinfo_columns[i]]] = [txinfo[txinfo_columns[i]] for _ in range(len(dfFiltered))]
 
     ## tron的智能合約排列順序好像都是固定從trx開始，多一個欄位確認To錢包位址是否為智能合約
-    dfFiltered.loc[:,['From_Contract']] = dfFiltered['From'].apply(lambda addr:res['contract_map'][addr])
-    dfFiltered.loc[:,['To_Contract']] = dfFiltered['To'].apply(lambda addr:res['contract_map'][addr])
+    dfFiltered.loc[:,['FromContract']] = dfFiltered['From'].apply(lambda addr:res['contract_map'][addr])
+    dfFiltered.loc[:,['ToContract']] = dfFiltered['To'].apply(lambda addr:res['contract_map'][addr])
     return dfFiltered

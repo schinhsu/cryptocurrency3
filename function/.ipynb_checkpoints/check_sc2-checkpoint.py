@@ -35,7 +35,7 @@ def lookup_details_eth(ethObj,txinfo):
     dfFiltered = dfFiltered[~((dfFiltered['From']==txinfo['From']) & (dfFiltered['To']==txinfo['To']) & (dfFiltered['Value']==txinfo['Value']) & (dfFiltered['Token']==txinfo['Token']))]
     
     txinfo_columns = txinfo.index.tolist()
-    for i in range(len(columns),len(txinfo_columns)):
+    for i in range(len(dfFiltered.columns),len(txinfo_columns)):
         dfFiltered[txinfo_columns[i]] = txinfo[txinfo_columns[i]]
     return dfFiltered
 
@@ -46,19 +46,19 @@ def lookup_details_tron(tronObj,txinfo):
     df['amount'] = df[['amount_str','decimals']].apply(lambda x: transform_balance(x['amount_str'], x['decimals']), axis=1)
     df['block'] = res['block']
     df['txid'] = res['hash']
-    df['time'] = pandas.to_datetime(res['timestamp'],unit='ms').tz_localize(pytz.utc).tz_convert('Asia/Taipei')
+    df['time'] = pandas.to_datetime(res['timestamp'],unit='ms')
     df['txfee'] = transform_balance(res['cost']['energy_fee'],decimalLen=6)
     df['symbol'] = df['symbol'].str.upper()
     dfTrim = df[['block','txid','time','from_address','to_address','amount','txfee','symbol','contract_address']]
-    dfTrim.columns = columns
+    dfTrim.columns = ['BlockNo','TxID','Date','From','To','Value','TxFee','Token','Contract']
 
     dfFiltered = dfTrim[~((dfTrim['From']==txinfo['From']) & (dfTrim['To']==txinfo['To']) & (dfTrim['Value']==txinfo['Value']) & (dfTrim['Token']==txinfo['Token']))]
     
     txinfo_columns = txinfo.index.tolist()
-    for i in range(len(columns),len(txinfo_columns)):
+    for i in range(len(dfFiltered.columns),len(txinfo_columns)):
         dfFiltered.loc[:,[txinfo_columns[i]]] = [txinfo[txinfo_columns[i]] for _ in range(len(dfFiltered))]
 
     ## tron的智能合約排列順序好像都是固定從trx開始，多一個欄位確認To錢包位址是否為智能合約
-    dfFiltered.loc[:,['From_Contract']] = dfFiltered['From'].apply(lambda addr:res['contract_map'][addr])
-    dfFiltered.loc[:,['To_Contract']] = dfFiltered['To'].apply(lambda addr:res['contract_map'][addr])
+    dfFiltered.loc[:,['FromContract']] = dfFiltered['From'].apply(lambda addr:res['contract_map'][addr])
+    dfFiltered.loc[:,['ToContract']] = dfFiltered['To'].apply(lambda addr:res['contract_map'][addr])
     return dfFiltered
