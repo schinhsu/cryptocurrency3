@@ -33,3 +33,5 @@ class TRONPriceHistoryManager(PriceHistoryManager):
         if check.empty:
             return None
         return check.iloc[0]['abbr'].upper()
+
+from wallet.query import query_addr_tron as query_addr

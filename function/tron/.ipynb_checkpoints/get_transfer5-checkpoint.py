@@ -10,7 +10,11 @@ import pandas
 
 def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
                            end=datetime.datetime.now(),
-                           transType='TRC20',limit=100000,debugMode=False):
+                           transType='TRC20',limit=100000,
+                           totalLimit=1000000,
+                           debugMode=False):
+    msg = ''
+    error = False
     ##依transType不同，回傳的key值不同
     if transType == 'TRC10' or transType == 'Internal':
         collects = {'data':[],'contractMap':{}}
@@ -30,6 +34,13 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
         res = tronObj.get_transfer_once(addr,startnum=pageNo*50,
                                             start=starttime,end=endtime,
                                               transType=transType)
+        if res['rangeTotal'] > totalLimit:
+            msg = f'交易總數超過{totalLimit}次，應為交易所或服務商'
+            if debugMode:
+                print(msg)
+                error = True
+                break
+        
         if transType == 'TRC10' or transType == 'Internal':
             collects['data'] += res['data']
             if 'contractMap' in res.keys():
@@ -72,16 +83,18 @@ def get_transfer_tron_desc(tronObj,addr,start=datetime.datetime(2010,1,1),
         if pageNo >= pageLimit:
             endtime = pandas.to_datetime(txs[-1][time_colname],unit='ms')
             pageNo = 0
-        
+
     
     dfCollect = json2df_tron(tronObj,collects,transType=transType)
     dfCollect = dfCollect.drop_duplicates()
-    return dfCollect
+    return error,msg,dfCollect
 
 
 def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
                           end=datetime.datetime.now(),
-                          transType='TRC20',limit=3000,sort='desc',
+                          transType='TRC20',limit=3000,
+                          totalLimit=1000000,
+                          sort='desc',
                           debugMode=False):
     msg = ''
     endtime = end
@@ -94,6 +107,12 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
             thisTotal = res['rangeTotal']
             if debugMode:
                 print(f'>> 設定查詢時間(迄)= {endtime.strftime("%Y-%m-%d %H:%M:%S")} 共 {thisTotal} 筆；預計調整startnum = min({thisTotal}-{limit},9950) = {max(min(thisTotal-limit,9950),0)}')
+            if thisTotal > totalLimit:
+                msg = f'交易總數超過{totalLimit}次，應為交易所或服務商'
+                if debugMode:
+                    print(msg)
+                    error = True
+                    break
             if thisTotal > limit:
                 offset = min(thisTotal-limit,9950)
                 offset = max(offset,0)
@@ -126,10 +145,12 @@ def get_transfer_tron(tronObj,addr,start=datetime.datetime(2010,1,1),
                     endtime = tmptime
             else:
                 break
-    
-    dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
+    if error:
+        return error,msg,pandas.DataFrame(columns=columns)
+        
+    error,msg,dfCollect = get_transfer_tron_desc(tronObj,addr,start=start,
                          end=endtime,transType=transType,limit=limit,
-                         debugMode=debugMode)
+                         totalLimit=totalLimit,debugMode=debugMode)
     dfCollect = dfCollect.sort_values(by='Date',ascending=sort=='asc')
     return error,msg,dfCollect
 
@@ -167,8 +188,8 @@ def json2df_tron(tronObj,response,transType):
                                 token,contract,txType])
         dfTxs = pandas.DataFrame(data=txinfos,columns=columns)
         if len(response['contractMap']) > 0:
-            dfTxs['FromContract'] = dfTxs.apply(lambda tx:response['contractMap'][tx['From']],axis=1)
-            dfTxs['ToContract'] = dfTxs.apply(lambda tx:response['contractMap'][tx['To']],axis=1)
+            dfTxs['FromContract'] = dfTxs.apply(lambda tx:response['contractMap'].get(tx['From'],False),axis=1)
+            dfTxs['ToContract'] = dfTxs.apply(lambda tx:response['contractMap'].get(tx['To'],False),axis=1)
         
     elif transType == 'Internal':
         for tx in response['data']:
@@ -225,15 +246,11 @@ def json2df_tron(tronObj,response,transType):
                            ])
         dfTxs = pandas.DataFrame(data=txinfos,columns=columns+['FromContract','ToContract','FromLabel','ToLabel'])
 
-
+    
     if not 'FromLabel' in dfTxs.columns:
-        if dfTxs.empty:
-            dfTxs['FromLabel'] = []
-        else:
+        if not dfTxs.empty:
             dfTxs['FromLabel'] = dfTxs.apply(lambda tx:query_label(tronObj,tx['From'],tx['FromContract']),axis=1)
     if not 'ToLabel' in dfTxs.columns:
-        if dfTxs.empty:
-            dfTxs['ToLabel'] = []
-        else:
+        if not dfTxs.empty:
             dfTxs['ToLabel'] = dfTxs.apply(lambda tx:query_label(tronObj,tx['To'],tx['ToContract']),axis=1)
     return dfTxs

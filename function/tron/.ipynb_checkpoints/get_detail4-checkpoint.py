@@ -21,6 +21,7 @@ def get_txinfo_by_hash(tronObj,txid):
     try:
         txfee = trx_info['cost']['energy_fee']/(10**6)+trx_info['cost']['net_fee']/(10**6)
     except TypeError:
+        #部分API回傳值是str非int
         txfee = eval(trx_info['cost']['energy_fee'])/(10**6)+eval(trx_info['cost']['net_fee'])/(10**6)
     
     # print(f'block 區塊編號',block)
@@ -29,50 +30,49 @@ def get_txinfo_by_hash(tronObj,txid):
     # print(f'cost 交易手續費',txfee)
     
     txcomment = ''
-    if 'signature_addresses' in trx_info.keys() and len(trx_info['signature_addresses']) > 0:
-        txcomment = '此筆交易由 '+' '.join(trx_info['signature_addresses'])+ ' 簽署'
-    if 'trigger_info' in trx_info.keys():
-        method = trx_info["trigger_info"].get('method')
-        parameter = trx_info["trigger_info"].get('parameter')
-        if method and parameter:
-            txcomment = f'method: {method}\nparameter: {parameter}'
+    if 'trigger_info' in trx_info.keys() and len(trx_info['trigger_info']) > 0:
+        try:
+            if not trx_info["trigger_info"].get('methodId') == 'a9059cbb':
+                txcomment = f'method: {trx_info["trigger_info"]["method"]}\nparameter: {trx_info["trigger_info"]["parameter"]}'
+        except KeyError:
+            print(f'In function <get_txinfo_by_hash>:\ntrigger_info無method或parameter: {trx_info["trigger_info"]}')
     if 'project' in trx_info.keys() and len(trx_info['project']) > 0:
         txcomment = '此筆交易使用 '+trx_info['project']
     ## 交易行為transactionBehavior
     if 'transactionBehavior' in trx_info.keys() and len(trx_info['transactionBehavior']) > 0:
-        #print(f'transactionBehavior 交易行為',trx_info['transactionBehavior'])
-        project = trx_info.get('project')
         txBehavior = trx_info.get('transactionBehavior')
-        token_out_amount = txBehavior.get('token_out_amount')
         if not txBehavior.get('event') is None:
-            txcomment = f'此筆交易透過 {project} 平台，服務類型：{txBehavior["event"]}'
-        else:
-            try:
-                token_out_amount = txBehavior.get('token_out_amount')
-                if token_out_amount is None:
-                    token_out_amount = txBehavior.get('token_sold_amount')
-                token_out_info = txBehavior.get('token_out_info')
-                #不知道為什麼有兩種Key值
-                if token_out_info is None:
-                    token_out_info = txBehavior.get('token_sold_info')
-                token_out_name = token_out_info.get('tokenAbbr')
-                token_in_amount = txBehavior.get('token_in_amount')
-                if token_in_amount is None:
-                    token_in_amount = txBehavior.get('token_bought_amount')
-                token_in_info = txBehavior.get('token_in_info')
-                #不知道為什麼有兩種Key值
-                if token_in_info is None:
-                    token_in_info = txBehavior.get('token_bought_info')
-                token_in_name = token_in_info.get('tokenAbbr')
-                
-                if project and token_out_amount and token_out_name and token_in_amount and token_in_name:
-                    token_out_value = int(token_out_amount) / 10**token_out_info.get('tokenDecimal', 6)
-                    token_in_value = int(token_in_amount) / 10**token_in_info.get('tokenDecimal', 6)
-                    txcomment = f'此筆交易透過 {project} 平台，使用 {token_out_value} {token_out_name} 兌換 {token_in_value} {token_in_name}'
-            except AttributeError:
-                txcomment = f'此筆交易透過 {project} 平台，待更新類型'
-                print('新型態交易',txBehavior)
-    
+            if len(txcomment) > 0:
+                txcomment += '，'
+            txcomment += f'服務類型：{txBehavior["event"]}'
+        
+        token_out_info = None
+        token_out_keys = ['token_out_','token_sold_']
+        for token_out_key in token_out_keys:
+            if not txBehavior.get(token_out_key+'info') is None:
+                token_out_info = txBehavior[token_out_key+'info']
+                token_out_amount = txBehavior[token_out_key+'amount']
+                token_out_name = token_out_info.get('tokenAbbr','')
+                token_out_value = int(token_out_amount) / 10**token_out_info.get('tokenDecimal', 6)
+                break
+        token_in_info = None
+        token_in_keys = ['token_in_','token_bought_']
+        for token_in_key in token_in_keys:
+            if not txBehavior.get(token_in_key+'info') is None:
+                token_in_info = txBehavior[token_in_key+'info']
+                token_in_amount = txBehavior[token_in_key+'amount']
+                token_in_name = token_in_info.get('tokenAbbr','')
+                token_in_value = int(token_in_amount) / 10**token_in_info.get('tokenDecimal', 6)
+                break
+        if token_out_info and token_in_info:
+            if len(txcomment) > 0:
+                txcomment += '; '
+            txcomment += f'使用 {token_out_value} {token_out_name} 兌換 {token_in_value} {token_in_name}'
+    ## 有多簽權限signature_address會有其他錢包
+    if 'signature_addresses' in trx_info.keys() and len(trx_info['signature_addresses']) > 0:
+        if len(txcomment) > 0:
+            txcomment += '; '
+        txcomment += '此筆交易由 '+' '.join(trx_info['signature_addresses'])+ ' 簽署'
     
     txinfos = []
     ##除了trx以外的交易都沒有['contractData']['to_address']
@@ -107,7 +107,7 @@ def get_txinfo_by_hash(tronObj,txid):
         amount = trx_info['contractData']['call_value']/(10**6)
         token = 'TRX'
         contract = ''
-        txType = 'trc10'
+        txtype = 'trc10'
         txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
     ##如果真的完全沒抓到交易先標成0
     if len(txinfos) == 0:
@@ -115,9 +115,10 @@ def get_txinfo_by_hash(tronObj,txid):
         to_ = trx_info['contractData']['contract_address']
         amount = 0
         token = 'TRX'
-        contract = to_
+        contract = ''
         txtype = 'trc10'
         txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
+        print(f'In function <get_txinfo_by_hash>:\n特殊類型交易: {txid}')
     
     
     dfTxInfo = pandas.DataFrame(txinfos,columns=columns+['交易資訊'])

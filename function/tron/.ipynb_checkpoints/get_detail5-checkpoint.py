@@ -1,14 +1,13 @@
 from .. import columns
 from .. import transform_balance
-from .. import query_label_tron as query_label
-### 新增錢包位址標記資料儲存
+from . import query_addr
+### 新增錢包位址標記資料儲存內容(是否為contract)
 
 import datetime
 import pandas
 
 ## columns = ['BlockNo', 'TxID', 'Date', 'From', 'To', 'Value', 'TxFee', 'Token',  'Contract', 'TXType', '交易資訊', 'FromContract', 'ToContract', 'FromLabel'   'ToLabel]
 ### '交易資訊'可傳遞換幣、盜用情形
-
 
 def get_txinfo_by_hash(tronObj,txid):
     trx_info = tronObj.get_txinfo_by_hash(txid)
@@ -17,12 +16,12 @@ def get_txinfo_by_hash(tronObj,txid):
     ## 交易時間(UTC+8)轉換方式
     txtime = pandas.to_datetime(trx_info['timestamp'],unit='ms')+datetime.timedelta(hours=8)
     ## 交易手續費計算方式
-    ## 交易手續費計算方式
     try:
         txfee = trx_info['cost']['energy_fee']/(10**6)+trx_info['cost']['net_fee']/(10**6)
     except TypeError:
         #部分API回傳值是str非int
         txfee = eval(trx_info['cost']['energy_fee'])/(10**6)+eval(trx_info['cost']['net_fee'])/(10**6)
+        
     
     # print(f'block 區塊編號',block)
     # print(f'txid 交易序號',hash)
@@ -38,7 +37,6 @@ def get_txinfo_by_hash(tronObj,txid):
             print(f'In function <get_txinfo_by_hash>:\ntrigger_info無method或parameter: {trx_info["trigger_info"]}')
     if 'project' in trx_info.keys() and len(trx_info['project']) > 0:
         txcomment = '此筆交易使用 '+trx_info['project']
-    ## 交易行為transactionBehavior
     if 'transactionBehavior' in trx_info.keys() and len(trx_info['transactionBehavior']) > 0:
         txBehavior = trx_info.get('transactionBehavior')
         if not txBehavior.get('event') is None:
@@ -74,6 +72,8 @@ def get_txinfo_by_hash(tronObj,txid):
             txcomment += '; '
         txcomment += '此筆交易由 '+' '.join(trx_info['signature_addresses'])+ ' 簽署'
     
+            
+
     txinfos = []
     ##除了trx以外的交易都沒有['contractData']['to_address']
     if 'to_address' in trx_info['contractData'].keys():
@@ -87,6 +87,7 @@ def get_txinfo_by_hash(tronObj,txid):
             token = trx_info['contractData']['tokenInfo']['tokenAbbr']
             contract = trx_info['contractData']['tokenInfo']['tokenId']
             txtype = trx_info['contractData']['tokenInfo']['tokenType']
+        
         # print(f'{from_} 轉帳 {amount} {token}({contract}/{txtype}) 給 {to_}')
         txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
     ##但除了trx以外的交易都有['transfersAllList']
@@ -109,22 +110,11 @@ def get_txinfo_by_hash(tronObj,txid):
         contract = ''
         txtype = 'trc10'
         txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
-    ##如果真的完全沒抓到交易先標成0
-    if len(txinfos) == 0:
-        from_ = trx_info['contractData']['owner_address']
-        to_ = trx_info['contractData']['contract_address']
-        amount = 0
-        token = 'TRX'
-        contract = ''
-        txtype = 'trc10'
-        txinfos.append([block,hash,txtime,from_,to_,amount,txfee,token,contract,txtype,txcomment])
-        print(f'In function <get_txinfo_by_hash>:\n特殊類型交易: {txid}')
-    
-    
+        
+
     dfTxInfo = pandas.DataFrame(txinfos,columns=columns+['交易資訊'])
-    dfTxInfo['FromContract'] = dfTxInfo.apply(lambda tx:trx_info['contract_map'][tx['From']],axis=1)
-    dfTxInfo['ToContract'] = dfTxInfo.apply(lambda tx:trx_info['contract_map'][tx['To']],axis=1)
-    
-    dfTxInfo['FromLabel'] = dfTxInfo.apply(lambda tx:query_label(tronObj,tx['From'],tx['FromContract'],trx_info),axis=1)
-    dfTxInfo['ToLabel'] = dfTxInfo.apply(lambda tx:query_label(tronObj,tx['To'],tx['ToContract'],trx_info),axis=1)
+    # dfTxInfo['FromContract'] = dfTxInfo.apply(lambda tx:trx_info['contract_map'][tx['From']],axis=1)
+    # dfTxInfo['ToContract'] = dfTxInfo.apply(lambda tx:trx_info['contract_map'][tx['To']],axis=1)
+    dfTxInfo[['FromContract','FromLabel']] = dfTxInfo.apply(lambda tx:pandas.Series(query_addr(tronObj,tx['From'],trx_info,contract_maps=trx_info['contract_map'])),axis=1)
+    dfTxInfo[['ToContract','ToLabel']] = dfTxInfo.apply(lambda tx:pandas.Series(query_addr(tronObj,tx['To'],trx_info,contract_maps=trx_info['contract_map'])),axis=1)
     return dfTxInfo
