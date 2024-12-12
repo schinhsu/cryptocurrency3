@@ -146,13 +146,14 @@ def json2df_tron(tronObj,response,transType):
             #交易時間(UTC+8)轉換方式
             txtime = pandas.to_datetime(tx['timestamp'],unit='ms')+datetime.timedelta(hours=8)
             from_ = tx['ownerAddress']
-            amount = transform_balance(tx['amount'],decimalLen=tx['tokenInfo']['tokenDecimal'])
+            
             try:
                 txfee = transform_balance(tx['cost']['fee'],decimalLen=6)
             except KeyError:
                 txfee = None ##手續費統一寫None
             #有些交易沒有tokenInfo
             try:
+                amount = transform_balance(tx['amount'],decimalLen=tx['tokenInfo']['tokenDecimal'])
                 token = tx['tokenInfo']['tokenAbbr']
                 contract = ''
                 if not tx['tokenInfo'].get('tokenId') is None:
