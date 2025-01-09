@@ -225,8 +225,14 @@ def json2df_tron(tronObj,response,transType):
                 
     
             ##改成最後一起apply給值
-            trx_info['addressTag'][from_] = tx['from_address_tag']['from_address_tag']
-            trx_info['addressTag'][to_] = tx['to_address_tag']['to_address_tag']
+            try:
+                trx_info['addressTag'][from_] = tx['from_address_tag']['from_address_tag']
+            except KeyError:
+                trx_info['addressTag'][from_] = ''
+            try:
+                trx_info['addressTag'][to_] = tx['to_address_tag']['to_address_tag']
+            except KeyError:
+                trx_info['addressTag'][to_] = ''
             contract_maps[from_] = tx['fromAddressIsContract']
             contract_maps[to_] = tx['toAddressIsContract']
             txinfos.append([block,txid,txtime,from_,to_,amount,txfee,
